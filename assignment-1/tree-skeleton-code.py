@@ -63,13 +63,19 @@ def entropy_attr(attr, values, rows):
     gains=[]
     gains_v = []
     E1 = []
-    E2 = []          
+    E2 = []   
+    minv = min(attr)
+    maxv = max(attr)    
+    sprr = 40
+    itr = (maxv - minv)/float(sprr)   
     split_arr = attr.copy()
     split_arr.sort()
     # print "split", split_arr , split_arr.shape
     print len(set(values))
-    for j in range (rows-1):
-        to_split = (split_arr[j] + split_arr[j+1])/float(2)
+    # for j in range (rows - 1):
+    for j in range(sprr):
+        to_split = minv + j*itr
+        # to_split = (split_arr[j] + split_arr[j+1])/float(2)
         count1p = 0
         count1n = 0
         count2p = 0
@@ -77,7 +83,7 @@ def entropy_attr(attr, values, rows):
         summ = 0
         i = 0
         for instance in attr:
-            if instance <= to_split:
+            if instance < to_split:
                 if values[i] == 1:
                     count1p = count1p + 1
                 else:
@@ -149,59 +155,67 @@ def preorder(data, node, depth):
         return
     datal, datar = splitter(data, node)
 
-    # if len(datal) == len(data):
-    #     curr.leaf = True
-    #     curr.prediction = data[1,-1]
-    # elif len(datar) == len(data):
-    #     curr.leaf = True
-    #     curr.prediction = data[1,-1]
-    # else:
-    if curr.entropyleft == 0 or depth == 10:
-        new_nodel = treeNode(0,0,curr,True,0,0,False, depth + 1 )
-        if len(set(datal[:,-1])) == 1:
-            new_nodel.prediction = datal[0,-1]
+    if len(datal) == len(data):
+        curr.leaf = True
+        if len(datal) == 1:
+            curr.prediction = data[-1]
         else:
-            countp = 0
-            countn = 0
-            for instance in datal:
-                if datal[-1] == 1:
-                    countp = countp + 1
-                else:
-                    countn = countn + 1
-            if countn >= countp:
-                new_nodel.prediction = 0
-            else:
-                new_nodel.prediction = 1
-        print "A leaf node for ", datal.shape, " prediction : ", new_nodel.prediction
-        curr.left = new_nodel
-    else:
-        gain, attr, split_value, lettr, rettr = findAttrWithGain(datal)
-        new_nodel = treeNode(attr, split_value, curr, False, lettr, rettr, False, depth + 1)
-        curr.left = new_nodel
-    if curr.entropyright == 0 or depth == 10:
-        new_noder = treeNode(0,0,curr,True,0,0,False, depth + 1 )
-        if len(set(datar[:,-1])) == 1:
-            new_noder.prediction = datar[0,-1]
+            curr.prediction = data[0,-1]
+        return
+    elif len(datar) == len(data):
+        curr.leaf = True
+        if len(datar) == 1:
+            curr.prediction = data[-1]
         else:
-            countp = 0
-            countn = 0
-            for instance in datar:
-                if datar[-1] == 1:
-                    countp = countp + 1
-                else:
-                    countn = countn + 1
-            if countn >= countp:
-                new_noder.prediction = 0
-            else:
-                new_noder.prediction = 1
-        print "a leaf node generation for ",  datar.shape, " prediction : ", new_noder.prediction 
-        curr.right = new_noder
+            curr.prediction = data[0,-1]
+        return
     else:
-        gain, attr, split_value, lettr, rettr = findAttrWithGain(datar)
-        new_noder = treeNode(attr, split_value, curr, False, lettr, rettr, False, depth + 1)
-        curr.right = new_noder
-    preorder(datal, curr.left, depth+1)
-    preorder(datar, curr.right, depth+1)
+        if curr.entropyleft == 0 or depth == 10:
+            new_nodel = treeNode(0,0,curr,True,0,0,False, depth + 1 )
+            if len(set(datal[:,-1])) == 1:
+                new_nodel.prediction = datal[0,-1]
+            else:
+                countp = 0
+                countn = 0
+                for instance in datal:
+                    if instance[-1] == 1:
+                        countp = countp + 1
+                    else:
+                        countn = countn + 1
+                if countn >= countp:
+                    new_nodel.prediction = 0
+                else:
+                    new_nodel.prediction = 1
+            print "A leaf node for ", datal.shape, " prediction : ", new_nodel.prediction
+            curr.left = new_nodel
+        else:
+            gain, attr, split_value, lettr, rettr = findAttrWithGain(datal)
+            new_nodel = treeNode(attr, split_value, curr, False, lettr, rettr, False, depth + 1)
+            curr.left = new_nodel
+        if curr.entropyright == 0 or depth == 10 :
+            new_noder = treeNode(0,0,curr,True,0,0,False, depth + 1 )
+            if len(set(datar[:,-1])) == 1:
+                new_noder.prediction = datar[0,-1]
+            else:
+                countp = 0
+                countn = 0
+                for instance in datar:
+                    if instance[-1] == 1:
+                        countp = countp + 1
+                    else:
+                        countn = countn + 1
+                if countn >= countp:
+                    new_noder.prediction = 0
+                else:
+                    new_noder.prediction = 1
+            print "a leaf node generation for ",  datar.shape, " prediction : ", new_noder.prediction 
+            curr.right = new_noder
+        else:
+            gain, attr, split_value, lettr, rettr = findAttrWithGain(datar)
+            new_noder = treeNode(attr, split_value, curr, False, lettr, rettr, False, depth + 1)
+            curr.right = new_noder
+        preorder(datal, curr.left, depth+1)
+        preorder(datar, curr.right, depth+1)
 
 
 
@@ -260,7 +274,7 @@ def classification(data, node):
         return node.prediction
     newdata = data.copy()
     newdata = numpy.delete(newdata, node.attrid)
-    if data[node.attrid] <= node.svalue:
+    if data[node.attrid] < node.svalue:
         return classification(newdata, node.left)
     else:
         return classification(newdata, node.right)
