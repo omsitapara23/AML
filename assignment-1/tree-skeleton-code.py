@@ -131,34 +131,77 @@ def splitter(data, node):
 
 def preorder(data, node, depth):
     curr = node
-    if depth == 9 or curr.leaf == True:
-        curr.leaf = True
+    # if depth == 11 and curr.leaf == False:
+    #     curr.leaf = True
+    #     countp = 0
+    #     countn = 0
+    #     for instance in data:
+    #         if data[-1] == 1:
+    #             countp = countp + 1
+    #         else:
+    #             countn = countn + 1
+    #     if countn >= countp:
+    #         curr.prediction = 0
+    #     else:
+    #         curr.prediction = 1
+    #     return
+    if curr.leaf == True:
         return
     datal, datar = splitter(data, node)
-    if len(datal) == len(data):
-        curr.leaf = True
-        curr.prediction = data[1,-1]
-    elif len(datar) == len(data):
-        curr.leaf = True
-        curr.prediction = data[1,-1]
+
+    # if len(datal) == len(data):
+    #     curr.leaf = True
+    #     curr.prediction = data[1,-1]
+    # elif len(datar) == len(data):
+    #     curr.leaf = True
+    #     curr.prediction = data[1,-1]
+    # else:
+    if curr.entropyleft == 0 or depth == 10:
+        new_nodel = treeNode(0,0,curr,True,0,0,False, depth + 1 )
+        if len(set(datal[:,-1])) == 1:
+            new_nodel.prediction = datal[0,-1]
+        else:
+            countp = 0
+            countn = 0
+            for instance in datal:
+                if datal[-1] == 1:
+                    countp = countp + 1
+                else:
+                    countn = countn + 1
+            if countn >= countp:
+                new_nodel.prediction = 0
+            else:
+                new_nodel.prediction = 1
+        print "A leaf node for ", datal.shape, " prediction : ", new_nodel.prediction
+        curr.left = new_nodel
     else:
-        if curr.entropyleft == 0:
-            new_nodel = treeNode(0,0,curr,True,0,0,False, depth + 1 )
-            curr.left = new_nodel
+        gain, attr, split_value, lettr, rettr = findAttrWithGain(datal)
+        new_nodel = treeNode(attr, split_value, curr, False, lettr, rettr, False, depth + 1)
+        curr.left = new_nodel
+    if curr.entropyright == 0 or depth == 10:
+        new_noder = treeNode(0,0,curr,True,0,0,False, depth + 1 )
+        if len(set(datar[:,-1])) == 1:
+            new_noder.prediction = datar[0,-1]
         else:
-            gain, attr, split_value, lettr, rettr = findAttrWithGain(datal)
-            new_nodel = treeNode(attr, split_value, curr, False, lettr, rettr, False, depth + 1)
-            curr.left = new_nodel
-        if curr.entropyright == 0:
-            print "a leaf node generation for ",  datar.shape
-            new_noder = treeNode(0,0,curr,True,0,0,False, depth + 1 )
-            curr.right = new_noder
-        else:
-            gain, attr, split_value, lettr, rettr = findAttrWithGain(datar)
-            new_noder = treeNode(attr, split_value, curr, False, lettr, rettr, False, depth + 1)
-            curr.right = new_noder
-        preorder(datal, curr.left, depth+1)
-        preorder(datar, curr.right, depth+1)
+            countp = 0
+            countn = 0
+            for instance in datar:
+                if datar[-1] == 1:
+                    countp = countp + 1
+                else:
+                    countn = countn + 1
+            if countn >= countp:
+                new_noder.prediction = 0
+            else:
+                new_noder.prediction = 1
+        print "a leaf node generation for ",  datar.shape, " prediction : ", new_noder.prediction 
+        curr.right = new_noder
+    else:
+        gain, attr, split_value, lettr, rettr = findAttrWithGain(datar)
+        new_noder = treeNode(attr, split_value, curr, False, lettr, rettr, False, depth + 1)
+        curr.right = new_noder
+    preorder(datal, curr.left, depth+1)
+    preorder(datar, curr.right, depth+1)
 
 
 
@@ -212,6 +255,18 @@ def findAttrWithGain(data):
     print "E1 : " , E1[max_gain_index], " : ", E2[max_gain_index]
     return max_gain, max_gain_index, split_v[max_gain_index], E1[max_gain_index], E2[max_gain_index]
 
+def classification(data, node):
+    if node.leaf == True:
+        return node.prediction
+    newdata = data.copy()
+    newdata = numpy.delete(newdata, node.attrid)
+    if data[node.attrid] <= node.svalue:
+        return classification(newdata, node.left)
+    else:
+        return classification(newdata, node.right)
+        
+
+
 
 def run_decision_tree():
 
@@ -224,35 +279,41 @@ def run_decision_tree():
     # Split training/test sets
     # You need to modify the following code for cross validation.
     K = 10
-    training_set = [x for i, x in enumerate(data) if i % K != 9]
-    test_set = [x for i, x in enumerate(data) if i % K == 9]
-    training_set = numpy.array(training_set)
-    test_set = numpy.array(test_set)
-    print training_set.shape
-    print(training_set)
-    print test_set.shape
-    print(test_set)
-    root = generate_tree(training_set)
-    print_inorder(root)
-    print root.attrid, root.svalue
-    print root.left.attrid, root.left.svalue
-    print root.right.attrid, root.right.svalue
-    # tree = DecisionTree()
-    # # Construct a tree using training set
-    # tree.learn( training_set )
+    faccuracy = 0.0
+    for z in range(10):
 
-    # Classify the test set using the tree we just constructed
-    # results = []
-    # for instance in test_set:
-    #     result = tree.classify( instance[:-1] )
-    #     print result, " : " , instance[-1] , result == instance[-1]
-    #     results.append( result == instance[-1])
+        training_set = [x for i, x in enumerate(data) if i % K != z]
+        test_set = [x for i, x in enumerate(data) if i % K == z]
+        training_set = numpy.array(training_set)
+        test_set = numpy.array(test_set)
+        print training_set.shape
+        print(training_set)
+        print test_set.shape
+        print(test_set)
+        root = generate_tree(training_set)
+        print_inorder(root)
 
-    # # Accuracy
-    # accuracy = float(results.count(True))/float(len(results))
-    # print "accuracy: %.4f" % accuracy       
+
+        # print root.attrid, root.svalue
+        # print root.left.attrid, root.left.svalue
+        # print root.right.attrid, root.right.svalue
+        # tree = DecisionTree()
+        # # Construct a tree using training set
+        # tree.learn( training_set )
+
+        # Classify the test set using the tree we just constructed
+        results = []
+        for instance in test_set:
+            result = classification( instance[:-1], root )
+            print result, " : " , instance[-1] , result == instance[-1]
+            results.append( result == instance[-1])
+
+        # Accuracy
+        accuracy = float(results.count(True))/float(len(results))
+        print "accuracy: %.4f" % accuracy 
+        faccuracy = faccuracy + accuracy
     
-
+    print "Final accu : ", faccuracy/10
     # # Writing results to a file (DO NOT CHANGE)
     # f = open(myname+"result.txt", "w")
     # f.write("accuracy: %.4f" % accuracy)
