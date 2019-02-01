@@ -84,37 +84,37 @@ def entropy_attr(attr, values, rows):
     # print "split", split_arr , split_arr.shape
     print len(set(values))
     # for j in range (rows - 1):
-    for j in range(sprr):
-        to_split = minv + j*itr
-        # to_split = (split_arr[j] + split_arr[j+1])/float(2)
-        count1p = 0
-        count1n = 0
-        count2p = 0
-        count2n = 0
-        summ = 0
-        i = 0
-        for instance in attr:
-            if instance < to_split:
-                if values[i] == 1:
-                    count1p = count1p + 1
-                else:
-                    count1n = count1n + 1
+    # for j in range(sprr):
+    to_split = numpy.mean(attr)
+    # to_split = (split_arr[j] + split_arr[j+1])/float(2)
+    count1p = 0
+    count1n = 0
+    count2p = 0
+    count2n = 0
+    summ = 0
+    i = 0
+    for instance in attr:
+        if instance < to_split:
+            if values[i] == 1:
+                count1p = count1p + 1
             else:
-                if values[i] == 1:
-                    count2p = count2p + 1
-                else:
-                    count2n = count2n + 1
-            i = i + 1
-    # print count1p ,  " : " , count1n
-    # print count2p , " : " , count2n
-        summ = count1n + count1p + count2n + count2p
-        p1 = float(count1n + count1p)/summ
-        p2 = float(count2n + count2p)/summ
-        E1.append(calcEntropy(count1n, count1p))
-        E2.append(calcEntropy(count2n, count2p))
-        enttr = p1*calcEntropy(count1n, count1p) + p2*calcEntropy(count2n, count2p)
-        gains.append(enttr)
-        gains_v.append(to_split)
+                count1n = count1n + 1
+        else:
+            if values[i] == 1:
+                count2p = count2p + 1
+            else:
+                count2n = count2n + 1
+        i = i + 1
+    # pint count1p ,  " : " , count1n
+    # pint count2p , " : " , count2n
+    summ = count1n + count1p + count2n + count2p
+    p1 = float(count1n + count1p)/summ
+    p2 = float(count2n + count2p)/summ
+    E1.append(calcEntropy(count1n, count1p))
+    E2.append(calcEntropy(count2n, count2p))
+    enttr = p1*calcEntropy(count1n, count1p) + p2*calcEntropy(count2n, count2p)
+    gains.append(enttr)
+    gains_v.append(to_split)
     return min(gains), gains_v[gains.index(min(gains))], E1[gains.index(min(gains))], E2[gains.index(min(gains))]
     
 
@@ -319,50 +319,50 @@ def attr_gini(attr, values, rows):
     # print "split", split_arr , split_arr.shape
     print len(set(values))
     # for j in range (rows - 1):
-    for j in range(sprr):
-        to_split = minv + j*itr
-        # to_split = (split_arr[j] + split_arr[j+1])/float(2)
-        count1p = 0
-        count1n = 0
-        count2p = 0
-        count2n = 0
-        summ = 0
-        i = 0
-        for instance in attr:
-            if instance < to_split:
-                if values[i] == 1:
-                    count1p = count1p + 1
-                else:
-                    count1n = count1n + 1
+    # for j in range(sprr):
+    to_split = numpy.mean(attr)
+    # to_split = (split_arr[j] + split_arr[j+1])/float(2)
+    count1p = 0
+    count1n = 0
+    count2p = 0
+    count2n = 0
+    summ = 0
+    i = 0
+    for instance in attr:
+        if instance < to_split:
+            if values[i] == 1:
+                count1p = count1p + 1
             else:
-                if values[i] == 1:
-                    count2p = count2p + 1
-                else:
-                    count2n = count2n + 1
-            i = i + 1
-    # print count1p ,  " : " , count1n
-    # print count2p , " : " , count2n
-        if count1n + count1p != 0:
-            p1p = float(count1p)/(count1p + count1n)
-            p1n = float(count1n)/(count1n + count1p)
+                count1n = count1n + 1
         else:
-            p1p = 0
-            p1n = 0
-        if count2n + count2p != 0:
-            p2p = float(count2p)/(count2n + count2p)
-            p2n = float(count2n)/(count2n + count2p)
-        else:
-            p2p = 0
-            p2n = 0
-        GG1 = 1 - p1p*p1p - p1n*p1n
-        GG2 = 1 - p2p*p2p - p2n*p2n
-        G1.append(GG1)
-    #     to_split = minv + j*itr
-        G2.append(GG2)
-        summ = count1n + count1p + count2n + count2p
-        gini_f = ((count1n + count1p)/float(summ))*GG1 + ((count2n + count2p)/float(summ))*GG2
-        gini.append(gini_f)
-        gini_v.append(to_split)
+            if values[i] == 1:
+                count2p = count2p + 1
+            else:
+                count2n = count2n + 1
+        i = i + 1
+    # pint count1p ,  " : " , count1n
+    # pint count2p , " : " , count2n
+    if count1n + count1p != 0:
+        p1p = float(count1p)/(count1p + count1n)
+        p1n = float(count1n)/(count1n + count1p)
+    else:
+        p1p = 0
+        p1n = 0
+    if count2n + count2p != 0:
+        p2p = float(count2p)/(count2n + count2p)
+        p2n = float(count2n)/(count2n + count2p)
+    else:
+        p2p = 0
+        p2n = 0
+    GG1 = 1 - p1p*p1p - p1n*p1n
+    GG2 = 1 - p2p*p2p - p2n*p2n
+    G1.append(GG1)
+    #    to_split = minv + j*itr
+    G2.append(GG2)
+    summ = count1n + count1p + count2n + count2p
+    gini_f = ((count1n + count1p)/float(summ))*GG1 + ((count2n + count2p)/float(summ))*GG2
+    gini.append(gini_f)
+    gini_v.append(to_split)
     return min(gini), gini_v[gini.index(min(gini))], G1[gini.index(min(gini))], G2[gini.index(min(gini))]
 
 
