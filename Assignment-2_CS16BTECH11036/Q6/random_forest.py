@@ -237,7 +237,7 @@ def findAttrWithGain(data):
     E2 = []
     rows, column = data.shape
     set_ettr = entropy_set(data)
-    attributeToSplit = random.sample(range(0, column-1), min(column - 1, 2*int(math.sqrt(column))))
+    attributeToSplit = random.sample(range(0, column-1), min(column - 1, int(math.sqrt(column))))
     for i in attributeToSplit:
         a,b,c,d = entropy_attr(data[:,i], data[:,column-1], rows)
         diff_gains.append(set_ettr - a)
@@ -323,7 +323,7 @@ def findAttrWithGini(data):
     G1 = []
     G2 = []
     rows, column = data.shape
-    attributeToSplit = random.sample(range(0, column-1), min(column - 1, int(2*math.sqrt(column))))
+    attributeToSplit = random.sample(range(0, column-1), min(column - 1, int(math.sqrt(column))))
     for i in attributeToSplit:
         a,b,c,d = attr_gini(data[:,i], data[:,column-1], rows)
         diff_ginis.append(a)
@@ -385,6 +385,8 @@ def run_decision_tree(function = "gain"):
     training_set = training_set.values
     counter = 0
     final_prediction = 0
+    TP = 0
+    FN = 0
     accuracy_array = []
     for instance in diff_result:
         prediction1 = numpy.sum(instance, dtype=numpy.int32)
@@ -393,6 +395,10 @@ def run_decision_tree(function = "gain"):
             final_prediction = 0
         else:
             final_prediction = 1
+        if final_prediction == 1 and test_set[counter,57] == 1:
+            TP += 1
+        if final_prediction == 0 and test_set[counter,57] == 1:
+            FN += 1
         accuracy_array.append(final_prediction == test_set[counter,57])
         counter += 1
     
@@ -418,6 +424,9 @@ def run_decision_tree(function = "gain"):
 
     faccuracy = float(oobs_array.count(True))/float(len(oobs_array))
     print "Final oob_acc : %.4f" % faccuracy
+
+    sensitivity = float(TP)/float(TP+FN)
+    print "Final sensitivity : %.4f" % sensitivity
 
 
 if __name__ == "__main__":
